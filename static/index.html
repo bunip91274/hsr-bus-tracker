@@ -13,12 +13,40 @@
 </head>
 <body>
   <header>
-    <h1>Res Bus</h1>
-    <select id="residence" aria-label="Your residence"></select>
+    <div class="top">
+      <h1>Res Bus</h1>
+      <select id="residence" aria-label="Your residence"></select>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="plan" aria-selected="true">Plan a trip</button>
+      <button role="tab" data-tab="board" aria-selected="false">Next buses</button>
+    </nav>
   </header>
 
-  <p id="status" class="status" role="status"></p>
-  <main id="stops"></main>
+  <!-- Plan a trip -->
+  <section id="plan" class="panel">
+    <div class="search">
+      <input id="dest" type="search" placeholder="Where to? e.g. Limeridge, Jackson Square"
+             autocomplete="off" aria-label="Destination stop" aria-controls="suggestions">
+      <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
+    </div>
+    <div id="recents" class="recents"></div>
+
+    <div class="when-row">
+      <label><input type="radio" name="when" value="now" checked> Leave now</label>
+      <label><input type="radio" name="when" value="by"> Arrive by</label>
+      <input id="arrive-by" type="time" aria-label="Arrive by time" disabled>
+    </div>
+
+    <p id="plan-status" class="status" role="status"></p>
+    <div id="options"></div>
+  </section>
+
+  <!-- Next buses board -->
+  <section id="board" class="panel" hidden>
+    <p id="status" class="status" role="status"></p>
+    <div id="stops"></div>
+  </section>
 
   <footer>
     Data: City of Hamilton open data (HSR GTFS). Not affiliated with HSR or McMaster.
@@ -32,6 +60,29 @@
       </div>
       <ul class="deps"></ul>
     </section>
+  </template>
+
+  <template id="option-tpl">
+    <article class="option">
+      <div class="leave">
+        <div>
+          <span class="leave-label">Leave by</span>
+          <span class="leave-time"></span>
+        </div>
+        <span class="leave-in"></span>
+      </div>
+      <div class="ride-head">
+        <span class="badge"></span>
+        <span class="headsign"></span>
+        <span class="live-tag"></span>
+      </div>
+      <ol class="steps">
+        <li class="step walk-in"></li>
+        <li class="step bus"></li>
+        <li class="step walk-out"></li>
+        <li class="step arrive"></li>
+      </ol>
+    </article>
   </template>
 
   <script src="app.js"></script>

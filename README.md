@@ -1,6 +1,6 @@
-# Res Bus: HSR departures for McMaster residences
+# Res Bus: HSR trip planner for McMaster residences
 
-Pick your residence, see the next buses at the stops you can actually walk to, with live predictions from Hamilton Street Railway's realtime feed. One screen, no map hunting, no ads.
+Pick your residence and where you're going. Res Bus tells you **when to leave**, which stop to walk to, which bus to take, and when you'll arrive, using live predictions from Hamilton Street Railway's realtime feed. There's also a **Next buses** board for the stops around your res.
 
 > Built because the existing transit apps make you search for a stop every single time when all I want to know is "when's the next bus outside my res?"
 
@@ -23,7 +23,10 @@ GTFS static (.zip, daily)            GTFS-Realtime TripUpdates (.pb, every 30s)
 
 Some details that took actual thought:
 
-- **Memory:** HSR's `stop_times.txt` is ~70 MB. The loader streams it and keeps only rows for stops within walking distance of a residence.
+- **Trip planning:** for every bus leaving a stop near your res, the planner rides forward along that trip looking for a stop near your destination. *Leave by* = live departure − walk time − 2 min buffer; *arrive* = live arrival + walk from the stop. Options that make you leave earlier *and* arrive later than another option are dropped, and "arrive by" mode lists the latest you can get away with first.
+- **Nearby-stop matching:** destinations include stops within 250 m, so it will happily tell you to get off at MacNab Terminal and walk a minute to King at James if that bus is faster.
+
+- **Memory:** HSR's `stop_times.txt` is ~70 MB. The loader streams it twice: once to find trips that pass near a residence, then to keep only those trips' stops (with slotted dataclasses). Untimed stops are interpolated between timepoints.
 - **Service days:** GTFS times can go past `24:00:00` (a "25:10" bus belongs to yesterday's schedule), and times are measured from *noon minus 12 h* so they stay correct on daylight-saving days. Both are handled and tested.
 - **Holidays:** `calendar_dates.txt` exceptions (e.g. Thanksgiving running a Saturday schedule) are applied.
 - **Realtime merging:** exact stop prediction > delay propagated from the bus's most recent stop > trip-level delay > schedule. Cancelled trips and skipped stops are flagged instead of silently showing a bus that won't come.
@@ -68,7 +71,9 @@ All settings live in `app/config.py` and can be overridden with environment vari
 ## Roadmap
 
 - [ ] Verify residence coordinates (currently approximate)
-- [ ] Group by direction ("to Westdale" / "to downtown") instead of by stop
+- [x] Trip planner: leave-by time, live ETA, arrive-by mode (direct buses)
+- [ ] Transfers (RAPTOR routing)
+- [ ] Search by address or place name, not just stop name
 - [ ] Service alerts feed (detours, stop closures)
 - [ ] Live bus positions on a small map (VehiclePositions feed)
 - [ ] Re-download the schedule automatically while the server is running

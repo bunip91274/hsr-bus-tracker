@@ -13,6 +13,7 @@ FILES = {
         "S1,Main at Emerson,43.2600,-79.9230\n"
         "S2,McMaster University Terminal,43.2616,-79.9180\n"
         "FAR,Downtown Gore,43.2557,-79.8690\n"
+        "FAR2,Gore Park EB,43.2559,-79.8686\n"
     ),
     "routes.txt": (
         "route_id,route_short_name,route_long_name,route_type,route_color,route_text_color\n"
@@ -34,7 +35,9 @@ FILES = {
         "T1,08:30:00,08:30:00,FAR,3\n"
         "T2,08:20:00,08:20:00,S1,1\n"
         "T2,08:25:00,08:25:00,S2,2\n"
+        "T2,08:45:00,08:45:00,FAR,3\n"
         "T3,08:10:00,08:10:00,S2,1\n"
+        "T3,08:35:00,08:35:00,FAR,2\n"
         "T_LATE,24:15:00,24:15:00,S2,1\n"
         "T_SAT,08:00:00,08:00:00,S1,1\n"
     ),

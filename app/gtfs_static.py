@@ -44,7 +44,7 @@ class Trip:
     headsign: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)  # slots: there can be hundreds of thousands of these
 class StopTime:
     trip_id: str
     stop_id: str
@@ -57,11 +57,18 @@ class StaticFeed:
     stops: dict[str, Stop]
     routes: dict[str, Route]
     trips: dict[str, Trip]
+    # Departures at the stops near residences, sorted by time.
     stop_times_by_stop: dict[str, list[StopTime]]
+    # Every stop (in order) of every trip that passes near a residence. Used for trip planning.
+    stop_times_by_trip: dict[str, list[StopTime]] = field(default_factory=dict)
     # service_id -> (weekday flags Mon..Sun, start date, end date)
     calendar: dict[str, tuple[tuple[bool, ...], date, date]] = field(default_factory=dict)
     # (service_id, date) -> True if added, False if removed
     calendar_dates: dict[tuple[str, date], bool] = field(default_factory=dict)
+
+    def reachable_stop_ids(self) -> set[str]:
+        """Stops you can get to on a single bus from some residence."""
+        return {st.stop_id for sts in self.stop_times_by_trip.values() for st in sts}
 
     def active_service_ids(self, d: date) -> set[str]:
         active = {
@@ -150,15 +157,30 @@ def load_static(zip_path: Path, keep_stop: Callable[[Stop], bool]) -> StaticFeed
             for r in _rows(zf, "trips.txt")
         }
 
+        # Pass 1: which trips stop near a residence at all?
+        trips_needed = {trip for trip, stop, _, _ in _stop_time_rows(zf) if stop in wanted}
+
+        # Pass 2: keep every stop of those trips, so we know where each bus goes next.
+        raw_by_trip: dict[str, list[tuple[int, str, int | None]]] = defaultdict(list)
+        for trip, stop, seq, t in _stop_time_rows(zf):
+            if trip in trips_needed:
+                raw_by_trip[trip].append((seq, stop, parse_gtfs_time(t) if t else None))
+
+        by_trip: dict[str, list[StopTime]] = {}
+        for trip, rows in raw_by_trip.items():
+            rows.sort()
+            times = interpolate_times([secs for _, _, secs in rows])
+            by_trip[trip] = [
+                StopTime(trip, stop, seq, secs)
+                for (seq, stop, _), secs in zip(rows, times)
+                if secs is not None
+            ]
+
         by_stop: dict[str, list[StopTime]] = defaultdict(list)
-        for r in _rows(zf, "stop_times.txt"):
-            sid = r["stop_id"]
-            if sid not in wanted:
-                continue
-            t = r.get("departure_time") or r.get("arrival_time")
-            if not t:
-                continue  # untimed stop; skip for now
-            by_stop[sid].append(StopTime(r["trip_id"], sid, int(r["stop_sequence"]), parse_gtfs_time(t)))
+        for sts in by_trip.values():
+            for st in sts:
+                if st.stop_id in wanted:
+                    by_stop[st.stop_id].append(st)
         for lst in by_stop.values():
             lst.sort(key=lambda st: st.departure_secs)
 
@@ -176,4 +198,34 @@ def load_static(zip_path: Path, keep_stop: Callable[[Stop], bool]) -> StaticFeed
             for r in _rows(zf, "calendar_dates.txt")
         }
 
-    return StaticFeed(stops, routes, trips, dict(by_stop), calendar, calendar_dates)
+    return StaticFeed(stops, routes, trips, dict(by_stop), by_trip, calendar, calendar_dates)
+
+
+def _stop_time_rows(zf: zipfile.ZipFile) -> Iterator[tuple[str, str, int, str]]:
+    """Fast reader for stop_times.txt (the big file): yields (trip_id, stop_id, seq, time-or-'')."""
+    with zf.open("stop_times.txt") as raw:
+        reader = csv.reader(io.TextIOWrapper(raw, encoding="utf-8-sig"))
+        header = [h.strip() for h in next(reader)]
+        col = {name: i for i, name in enumerate(header)}
+        i_trip, i_stop, i_seq = col["trip_id"], col["stop_id"], col["stop_sequence"]
+        i_dep, i_arr = col.get("departure_time"), col.get("arrival_time")
+        for row in reader:
+            if len(row) <= max(i_trip, i_stop, i_seq):
+                continue
+            t = ""
+            if i_dep is not None and i_dep < len(row):
+                t = row[i_dep].strip()
+            if not t and i_arr is not None and i_arr < len(row):
+                t = row[i_arr].strip()
+            yield row[i_trip], row[i_stop], int(row[i_seq]), t
+
+
+def interpolate_times(times: list[int | None]) -> list[int | None]:
+    """Fill blank times between timed stops evenly (GTFS lets agencies only time 'timepoints')."""
+    out = list(times)
+    known = [i for i, t in enumerate(out) if t is not None]
+    for a, b in zip(known, known[1:]):
+        gap = b - a
+        for i in range(a + 1, b):
+            out[i] = out[a] + (out[b] - out[a]) * (i - a) // gap
+    return out
