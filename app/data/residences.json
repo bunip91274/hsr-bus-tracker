@@ -1,0 +1,18 @@
+{
+  "_note": "Coordinates are APPROXIMATE placeholders. Drop a pin on each building's front door in Google Maps, copy the lat/lon, and replace these. Then flip verified to true.",
+  "residences": [
+    { "id": "pgcll",       "name": "Peter George Centre (PGCLL)", "lat": 43.2603, "lon": -79.9230, "verified": false },
+    { "id": "les-prince",  "name": "Les Prince Hall",             "lat": 43.2648, "lon": -79.9225, "verified": false },
+    { "id": "mary-keyes",  "name": "Mary E. Keyes",               "lat": 43.2640, "lon": -79.9170, "verified": false },
+    { "id": "bates",       "name": "Bates Residence",             "lat": 43.2633, "lon": -79.9218, "verified": false },
+    { "id": "brandon",     "name": "Brandon Hall",                "lat": 43.2655, "lon": -79.9205, "verified": false },
+    { "id": "edwards",     "name": "Edwards Hall",                "lat": 43.2660, "lon": -79.9190, "verified": false },
+    { "id": "hedden",      "name": "Hedden Hall",                 "lat": 43.2652, "lon": -79.9180, "verified": false },
+    { "id": "matthews",    "name": "Matthews Hall",               "lat": 43.2645, "lon": -79.9195, "verified": false },
+    { "id": "mckay",       "name": "McKay Hall",                  "lat": 43.2622, "lon": -79.9212, "verified": false },
+    { "id": "moulton",     "name": "Moulton Hall",                "lat": 43.2648, "lon": -79.9185, "verified": false },
+    { "id": "wallingford", "name": "Wallingford Hall",            "lat": 43.2665, "lon": -79.9200, "verified": false },
+    { "id": "whidden",     "name": "Whidden Hall",                "lat": 43.2658, "lon": -79.9172, "verified": false },
+    { "id": "woodstock",   "name": "Woodstock Hall",              "lat": 43.2668, "lon": -79.9185, "verified": false }
+  ]
+}
