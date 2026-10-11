@@ -106,3 +106,7 @@ async function init() {
 }
 
 init();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => { /* app still works without it */ });
+}

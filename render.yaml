@@ -1,0 +1,12 @@
+# One-click deploy on Render (render.com -> New -> Blueprint -> pick this repo).
+services:
+  - type: web
+    name: res-bus
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"

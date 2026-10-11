@@ -42,7 +42,15 @@ uvicorn app.main:app --reload
 
 Open http://localhost:8000. The first start downloads the HSR schedule (~13 MB), cached for 24 h in `.cache/`.
 
-To use it from your phone on the same Wi-Fi: `uvicorn app.main:app --host 0.0.0.0` and visit your computer's IP.
+### On your phone
+
+It's a PWA: open the site in Chrome on Android, then tap **⋮ → Add to Home screen** (Safari on iOS: **Share → Add to Home Screen**) for a full-screen app with its own icon.
+
+The phone needs a URL it can reach:
+
+- **Quick test:** run `cloudflared tunnel --url http://localhost:8000` on your laptop and open the `https://….trycloudflare.com` link it prints. Works on campus Wi-Fi, which often blocks device-to-device traffic.
+- **Always on:** push to GitHub, then on [Render](https://render.com) choose *New → Blueprint* and pick this repo (`render.yaml` is already set up).
+- **Real APK:** once it's hosted, paste the URL into [PWABuilder](https://www.pwabuilder.com) to generate an Android package.
 
 ### Tests
 
@@ -64,7 +72,8 @@ All settings live in `app/config.py` and can be overridden with environment vari
 - [ ] Service alerts feed (detours, stop closures)
 - [ ] Live bus positions on a small map (VehiclePositions feed)
 - [ ] Re-download the schedule automatically while the server is running
-- [ ] Deploy (Fly.io / Render) + installable PWA
+- [x] Installable PWA (manifest, icons, offline app shell)
+- [ ] Deploy to Render and publish an APK via PWABuilder
 
 ## Data
 
