@@ -10,7 +10,7 @@ Live predictions (delays, cancellations) are applied to both ends.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from .departures import predict, service_day_origin
@@ -68,8 +68,8 @@ def plan_trips(
     dest_radius_m: float = 250,
     limit: int = 4,
 ) -> list[TripOption]:
-    now = now.astimezone(timezone.utc)
-    latest_departure = arrive_by.astimezone(timezone.utc) if arrive_by else now + horizon
+    now = now.astimezone(UTC)
+    latest_departure = arrive_by.astimezone(UTC) if arrive_by else now + horizon
     dest = destination_area(feed, dest_stop_id, dest_radius_m)
     local_today = now.astimezone(tz).date()
 
@@ -87,7 +87,9 @@ def plan_trips(
                 if trip is None or trip.service_id not in active:
                     continue
                 sched_dep = origin + timedelta(seconds=st.departure_secs)
-                if sched_dep < now - timedelta(minutes=30) or sched_dep > latest_departure + timedelta(minutes=30):
+                if sched_dep < now - timedelta(minutes=30) or sched_dep > latest_departure + timedelta(
+                    minutes=30
+                ):
                     continue
 
                 tu = realtime.get(st.trip_id)
@@ -100,7 +102,11 @@ def plan_trips(
                     continue
 
                 # Ride forward along this trip looking for the destination.
-                stops_after = [s for s in feed.stop_times_by_trip.get(st.trip_id, []) if s.stop_sequence > st.stop_sequence]
+                stops_after = [
+                    s
+                    for s in feed.stop_times_by_trip.get(st.trip_id, [])
+                    if s.stop_sequence > st.stop_sequence
+                ]
                 for n, later in enumerate(stops_after, start=1):
                     if later.stop_id not in dest:
                         continue
@@ -131,13 +137,16 @@ def plan_trips(
                     key = (st.trip_id, service_date)
                     cur = best.get(key)
                     # Same bus, several ways to catch it: prefer arriving earliest, then leaving latest.
-                    if cur is None or (option.arrive, -option.leave_by.timestamp()) < (cur.arrive, -cur.leave_by.timestamp()):
+                    if cur is None or (option.arrive, -option.leave_by.timestamp()) < (
+                        cur.arrive,
+                        -cur.leave_by.timestamp(),
+                    ):
                         best[key] = option
                     break  # first stop in the destination area is the one to get off at
 
     options = list(best.values())
     if arrive_by:
-        options = [o for o in options if o.arrive <= arrive_by.astimezone(timezone.utc)]
+        options = [o for o in options if o.arrive <= arrive_by.astimezone(UTC)]
 
     # Drop options that are strictly worse: leave earlier AND arrive later than another one.
     options.sort(key=lambda o: (o.arrive, -o.leave_by.timestamp()))

@@ -140,7 +140,15 @@ async function loadPlan() {
   const box = $("options");
   if (!destination || !select.value) {
     box.replaceChildren();
-    status.textContent = destination ? "" : "Pick a destination to see when to leave.";
+    status.textContent = "";
+    if (!destination) box.append($("empty-tpl").content.cloneNode(true));
+    for (const chip of box.querySelectorAll("[data-try]")) {
+      chip.addEventListener("click", () => {
+        destInput.value = chip.dataset.try;
+        destInput.focus();
+        searchStops(chip.dataset.try);
+      });
+    }
     return;
   }
   const params = new URLSearchParams({ res: select.value, to: destination.stop_id });

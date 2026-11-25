@@ -7,9 +7,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 
 # Official City of Hamilton open-data feeds (see hamilton.ca open data licence).
-STATIC_GTFS_URL = os.getenv(
-    "HSR_STATIC_URL", "https://opendata.hamilton.ca/GTFS-Static/google_transit.zip"
-)
+STATIC_GTFS_URL = os.getenv("HSR_STATIC_URL", "https://opendata.hamilton.ca/GTFS-Static/google_transit.zip")
 TRIP_UPDATES_URL = os.getenv(
     "HSR_TRIP_UPDATES_URL", "https://opendata.hamilton.ca/GTFS-RT/GTFS_TripUpdates.pb"
 )

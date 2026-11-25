@@ -47,11 +47,7 @@ FILES = {
         "SAT,0,0,0,0,0,1,0,20260901,20261231\n"
     ),
     # Thanksgiving Monday 2026: weekday service removed, Saturday service added.
-    "calendar_dates.txt": (
-        "service_id,date,exception_type\n"
-        "WKDY,20261012,2\n"
-        "SAT,20261012,1\n"
-    ),
+    "calendar_dates.txt": ("service_id,date,exception_type\nWKDY,20261012,2\nSAT,20261012,1\n"),
 }
 
 

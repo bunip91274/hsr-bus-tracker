@@ -5,6 +5,7 @@
   --muted: #6b6661;
   --line: #e6e1dc;
   --maroon: #7a003c;
+  --gold: #fdbf57;
   --live: #1a8f4a;
   --late: #c4620a;
 }
@@ -157,7 +158,30 @@ footer { font-size: 0.72rem; color: var(--muted); text-align: center; padding: 1
   background: var(--card); border: 2px solid var(--muted);
 }
 .step.bus::before { border-color: var(--maroon); background: var(--maroon); }
+@media (prefers-color-scheme: dark) { .step.bus::before { border-color: #e0789f; background: #e0789f; } }
 .step.arrive { font-weight: 700; }
 .step.arrive::before { border-color: var(--text); background: var(--text); }
 .step .muted { color: var(--muted); }
 .message { color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 14px; font-size: 0.92rem; }
+
+/* ---- plan: empty state ---- */
+.empty-state {
+  text-align: center;
+  padding: 28px 18px 24px;
+  margin-top: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.empty-icon { width: 52px; height: 52px; color: var(--maroon); }
+@media (prefers-color-scheme: dark) { .empty-icon { color: #e0789f; } }
+.empty-state h2 { font-size: 1.15rem; margin: 10px 0 6px; letter-spacing: -0.01em; }
+.empty-state p { margin: 0 auto; max-width: 32ch; color: var(--muted); font-size: 0.92rem; }
+.try { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; }
+.try span { font-size: 0.8rem; color: var(--muted); margin-right: 2px; }
+.try button {
+  font: inherit; font-size: 0.82rem; padding: 6px 12px;
+  border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); cursor: pointer;
+}
+.try button:hover { border-color: var(--maroon); }

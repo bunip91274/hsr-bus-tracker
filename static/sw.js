@@ -1,6 +1,6 @@
 // Caches the app shell so it opens instantly from the home screen.
 // Bus times (/api/*) always go to the network: an old arrival time is worse than an error.
-const CACHE = "resbus-v2";
+const CACHE = "resbus-v3";
 const SHELL = ["/", "/style.css", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {

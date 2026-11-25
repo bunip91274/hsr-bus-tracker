@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -114,8 +114,11 @@ async def health():
     feed, rt = state["feed"], state["rt"]
     start, end = feed.date_range()
     return {
-        "static_feed": {"start": str(start), "end": str(end),
-                        "covers_today": feed.covers(datetime.now(config.TIMEZONE).date())},
+        "static_feed": {
+            "start": str(start),
+            "end": str(end),
+            "covers_today": feed.covers(datetime.now(config.TIMEZONE).date()),
+        },
         "realtime": {"age_seconds": rt.age_seconds, "last_error": rt.last_error},
     }
 
@@ -133,21 +136,28 @@ async def residence_departures(res_id: str):
 
     rt_cache: RealtimeCache = state["rt"]
     realtime = await rt_cache.get(state["http"])
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     stops = []
     for ns in state["nearby"][res_id]:
         deps = upcoming_departures(
-            state["feed"], ns.stop.stop_id, now, realtime, config.TIMEZONE,
-            window=timedelta(minutes=config.WINDOW_MINUTES), limit=config.DEPARTURES_PER_STOP,
+            state["feed"],
+            ns.stop.stop_id,
+            now,
+            realtime,
+            config.TIMEZONE,
+            window=timedelta(minutes=config.WINDOW_MINUTES),
+            limit=config.DEPARTURES_PER_STOP,
         )
-        stops.append({
-            "stop_id": ns.stop.stop_id,
-            "name": ns.stop.name,
-            "distance_m": round(ns.distance_m),
-            "walk_min": max(1, round(ns.distance_m / 80)),  # ~80 m/min walking pace
-            "departures": [_dep_json(d, now) for d in deps],
-        })
+        stops.append(
+            {
+                "stop_id": ns.stop.stop_id,
+                "name": ns.stop.name,
+                "distance_m": round(ns.distance_m),
+                "walk_min": max(1, round(ns.distance_m / 80)),  # ~80 m/min walking pace
+                "departures": [_dep_json(d, now) for d in deps],
+            }
+        )
 
     return {
         "residence": {"id": res.id, "name": res.name},
@@ -175,7 +185,7 @@ def _parse_arrive_by(value: str, now: datetime) -> datetime:
         local_now = now.astimezone(config.TIMEZONE)
         target = local_now.replace(hour=hh, minute=mm, second=0, microsecond=0)
     except ValueError:
-        raise HTTPException(400, "arrive_by must look like 14:30")
+        raise HTTPException(400, "arrive_by must look like 14:30") from None
     if target < local_now:
         target += timedelta(days=1)  # "arrive by 8:30" said at night means tomorrow morning
     return target
@@ -191,15 +201,18 @@ async def plan(res: str, to: str, arrive_by: str | None = None):
 
     rt_cache: RealtimeCache = state["rt"]
     realtime = await rt_cache.get(state["http"])
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     deadline = _parse_arrive_by(arrive_by, now) if arrive_by else None
 
-    options = plan_trips(feed, state["origin_stops"][res], to, now, realtime, config.TIMEZONE, arrive_by=deadline)
+    options = plan_trips(
+        feed, state["origin_stops"][res], to, now, realtime, config.TIMEZONE, arrive_by=deadline
+    )
 
     message = None
     if not options:
         message = (
-            "No direct bus gets you there in time." if deadline
+            "No direct bus gets you there in time."
+            if deadline
             else "No direct bus in the next 3 hours. This trip probably needs a transfer (coming soon)."
         )
     return {

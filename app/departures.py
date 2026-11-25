@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from .gtfs_static import StaticFeed, StopTime
@@ -40,7 +40,7 @@ class Departure:
 def service_day_origin(service_date: date, tz: ZoneInfo) -> datetime:
     """GTFS times count from 'noon minus 12h' local time, which handles DST-change days correctly."""
     noon = datetime.combine(service_date, time(12), tzinfo=tz)
-    return noon.astimezone(timezone.utc) - timedelta(hours=12)
+    return noon.astimezone(UTC) - timedelta(hours=12)
 
 
 def predict(st: StopTime, scheduled: datetime, tu: TripUpdateInfo | None) -> tuple[datetime | None, bool]:
@@ -56,13 +56,14 @@ def predict(st: StopTime, scheduled: datetime, tu: TripUpdateInfo | None) -> tup
             if u.skipped:
                 return None, True
             if u.time is not None:
-                return datetime.fromtimestamp(u.time, timezone.utc), False
+                return datetime.fromtimestamp(u.time, UTC), False
             if u.delay is not None:
                 return scheduled + timedelta(seconds=u.delay), False
 
     # 2. Propagate the delay from the closest earlier stop that reported one (GTFS-RT convention).
     earlier = [
-        u for u in tu.updates
+        u
+        for u in tu.updates
         if u.stop_sequence is not None and u.stop_sequence < st.stop_sequence and u.delay is not None
     ]
     if earlier:
@@ -86,7 +87,7 @@ def upcoming_departures(
     limit: int = 6,
     include_canceled: bool = True,
 ) -> list[Departure]:
-    now = now.astimezone(timezone.utc)
+    now = now.astimezone(UTC)
     local_today = now.astimezone(tz).date()
     results: list[Departure] = []
 

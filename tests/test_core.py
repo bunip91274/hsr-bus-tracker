@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -23,6 +23,7 @@ def local(y, mo, d, h, mi):
 
 
 # --- static feed -----------------------------------------------------------
+
 
 def test_parse_gtfs_time_past_midnight():
     assert parse_gtfs_time("25:10:00") == 25 * 3600 + 600
@@ -51,6 +52,7 @@ def test_dst_origin_is_noon_minus_12h():
 
 # --- residences ------------------------------------------------------------
 
+
 def test_nearby_stops_sorted_and_filtered(feed):
     res = Residence("pgcll", "PGCLL", 43.2603, -79.9228)
     found = nearby_stops(res, feed.stops, radius_m=500, limit=5)
@@ -59,6 +61,7 @@ def test_nearby_stops_sorted_and_filtered(feed):
 
 
 # --- departures ------------------------------------------------------------
+
 
 def test_schedule_only(feed):
     now = local(2026, 10, 14, 7, 58)
@@ -85,20 +88,24 @@ def test_delay_propagates_from_earlier_stop(feed):
 
 
 def test_absolute_time_prediction(feed):
-    predicted = local(2026, 10, 14, 8, 12).astimezone(timezone.utc)
-    rt = parse_trip_updates(make_trip_updates(
-        [{"trip_id": "T3", "stops": [{"seq": 1, "time": int(predicted.timestamp())}]}]
-    ))
+    predicted = local(2026, 10, 14, 8, 12).astimezone(UTC)
+    rt = parse_trip_updates(
+        make_trip_updates([{"trip_id": "T3", "stops": [{"seq": 1, "time": int(predicted.timestamp())}]}])
+    )
     deps = upcoming_departures(feed, "S2", local(2026, 10, 14, 8, 0), rt, TZ)
     t3 = next(d for d in deps if d.trip_id == "T3")
     assert t3.predicted == predicted and t3.delay_seconds == 120
 
 
 def test_canceled_and_skipped(feed):
-    rt = parse_trip_updates(make_trip_updates([
-        {"trip_id": "T1", "canceled": True},
-        {"trip_id": "T3", "stops": [{"seq": 1, "skipped": True}]},
-    ]))
+    rt = parse_trip_updates(
+        make_trip_updates(
+            [
+                {"trip_id": "T1", "canceled": True},
+                {"trip_id": "T3", "stops": [{"seq": 1, "skipped": True}]},
+            ]
+        )
+    )
     now = local(2026, 10, 14, 7, 58)
     deps = upcoming_departures(feed, "S2", now, rt, TZ)
     assert {d.trip_id for d in deps if d.canceled} == {"T1", "T3"}

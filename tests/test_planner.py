@@ -45,7 +45,11 @@ def test_options_sorted_by_arrival(feed, origin):
     t1 = opts[0]
     # Two ways to catch T1 (S1 at 8:00 or S2 at 8:05); same arrival, so take the one you can leave later for.
     from app.planner import walk_time
-    leave = {ns.stop.stop_id: at(8, 0 if ns.stop.stop_id == "S1" else 5) - walk_time(ns.distance_m) for ns in origin}
+
+    leave = {
+        ns.stop.stop_id: at(8, 0 if ns.stop.stop_id == "S1" else 5) - walk_time(ns.distance_m)
+        for ns in origin
+    }
     assert t1.board_stop.stop_id == max(leave, key=leave.get)
     assert t1.leave_by == t1.depart - t1.walk_to_stop - timedelta(minutes=2)
     assert t1.arrive.astimezone(TZ).strftime("%H:%M") == "08:30"

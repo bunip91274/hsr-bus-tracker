@@ -11,10 +11,11 @@ import io
 import time
 import zipfile
 from collections import defaultdict
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from itertools import pairwise
 from pathlib import Path
-from typing import Callable, Iterator
 
 import httpx
 
@@ -153,7 +154,9 @@ def load_static(zip_path: Path, keep_stop: Callable[[Stop], bool]) -> StaticFeed
         }
 
         trips = {
-            r["trip_id"]: Trip(r["trip_id"], r["route_id"], r["service_id"], r.get("trip_headsign", "").strip())
+            r["trip_id"]: Trip(
+                r["trip_id"], r["route_id"], r["service_id"], r.get("trip_headsign", "").strip()
+            )
             for r in _rows(zf, "trips.txt")
         }
 
@@ -172,7 +175,7 @@ def load_static(zip_path: Path, keep_stop: Callable[[Stop], bool]) -> StaticFeed
             times = interpolate_times([secs for _, _, secs in rows])
             by_trip[trip] = [
                 StopTime(trip, stop, seq, secs)
-                for (seq, stop, _), secs in zip(rows, times)
+                for (seq, stop, _), secs in zip(rows, times, strict=True)
                 if secs is not None
             ]
 
@@ -224,7 +227,7 @@ def interpolate_times(times: list[int | None]) -> list[int | None]:
     """Fill blank times between timed stops evenly (GTFS lets agencies only time 'timepoints')."""
     out = list(times)
     known = [i for i, t in enumerate(out) if t is not None]
-    for a, b in zip(known, known[1:]):
+    for a, b in pairwise(known):
         gap = b - a
         for i in range(a + 1, b):
             out[i] = out[a] + (out[b] - out[a]) * (i - a) // gap
